@@ -1,0 +1,10 @@
+openai
+anthropic
+scipy
+scikit-learn
+vllm
+matplotlib
+seaborn
+networkx
+backoff
+sentence_transformers
