@@ -8,3 +8,6 @@ seaborn
 networkx
 backoff
 sentence_transformers
+aiohttp
+transformers
+torch

@@ -6,6 +6,32 @@ This repo evaluates and analyzes a multi LLM agent framework, VacSim, for simula
 1. Create and activate an environment in anaconda (recommend `python=3.10`)
 2. `pip install -r requirements.txt`
 
+### Running on Google Colab
+To use VacSim on [Google Colab](https://colab.research.google.com/), clone the repository and install the dependencies in a notebook cell:
+
+```python
+!git clone https://github.com/<your-user>/VacSim.git
+%cd VacSim
+!pip install -r requirements.txt
+```
+
+Then set the appropriate API key(s) and run the driver script. For example, using OpenAI models:
+
+```python
+import os
+os.environ["OPENAI_API_KEY"] = "sk-..."  # or set AZURE_OPENAI_API_KEY / ANTHROPIC_API_KEY
+!python src/driver.py 1 --warmup_days 1 --run_days 1 --model_type gpt-4o-mini --news_path data/news/COVID-news-total-k=10000.pkl --network_str data/social_network-num=100-incl=neutral.pkl --profile_path data/profiles-num=100-incl=neutral.pkl --ports 7000 --temperature 0.7
+```
+
+### Using Gemma 3 270M Locally
+VacSim can also run without OpenAI by loading the Gemma 3 270M model through Hugging Face. After installing the dependencies in `requirements.txt`, set `--model_type` to the Gemma checkpoint:
+
+```python
+!python src/driver.py 1 --warmup_days 1 --run_days 1 --model_type google/gemma-3-270m --news_path data/news/COVID-news-total-k=10000.pkl --network_str data/social_network-num=100-incl=neutral.pkl --profile_path data/profiles-num=100-incl=neutral.pkl --temperature 0.7
+```
+
+No API keys are required when running with Gemma; the model weights are downloaded and used locally via `transformers`.
+
 ## Codebase Overview
 The main entry file of this repo is `driver.py`, which creates an `EvalSuite` object that conducts evaluations for the multi-agent system. Each `EvalSuite` (see implementations in `utils/eval_suite.py`) will analyze according to the `eval_mode` you input in:
 - 0 -> conduct attitude tuning
