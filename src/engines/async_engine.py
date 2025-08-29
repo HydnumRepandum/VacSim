@@ -19,29 +19,61 @@ class AsyncDataParallelEngine(Engine):
     def init_client(self):
         if "claude" in self.model_type:
             self.client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-        # TODO
+            self.azure_deployment = False
         elif "gpt" in self.model_type:
-            # For OpenAI models
-            # self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-            
-            # For Azure OpenAI models
-            api_version = "2023-05-15"
-            self.client = AzureOpenAI(
-                api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-                api_version=api_version,
-                azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT")
-            )
+            if os.getenv("AZURE_OPENAI_API_KEY") and os.getenv("AZURE_OPENAI_ENDPOINT"):
+                api_version = "2023-05-15"
+                self.client = AzureOpenAI(
+                    api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+                    api_version=api_version,
+                    azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT")
+                )
+                self.azure_deployment = True
+            else:
+                self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+                self.azure_deployment = False
+        elif "gemma" in self.model_type:
+            from transformers import AutoModelForCausalLM, AutoTokenizer
+            import torch
+
+            self.tokenizer = AutoTokenizer.from_pretrained(self.model_type)
+            self.model = AutoModelForCausalLM.from_pretrained(self.model_type)
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            self.model.to(device)
+            self.client = None
+            self.azure_deployment = False
         else:
             raise ValueError("Unsupported model type")
 
     async def async_request_generate(self, session, prompt, max_tokens=80, gen_seed=None):
         """
-        Asynchronously send a request to the OpenAI/Claude models with retries for rate-limiting.
+        Asynchronously generate text from remote APIs or local Hugging Face models.
         """
         retry_attempts = 0
 
         while retry_attempts < self.max_retries:
             try:
+                if "gemma" in self.model_type:
+                    from torch import no_grad
+
+                    def _sync_generate():
+                        inputs = self.tokenizer.apply_chat_template(
+                            prompt,
+                            return_tensors="pt",
+                            add_generation_prompt=True,
+                        ).to(self.model.device)
+                        with no_grad():
+                            output = self.model.generate(
+                                inputs,
+                                max_new_tokens=max_tokens,
+                                do_sample=True,
+                                temperature=0.7,
+                            )
+                        generated = output[0][inputs.shape[-1]:]
+                        return self.tokenizer.decode(generated, skip_special_tokens=True)
+
+                    return await asyncio.to_thread(_sync_generate)
+
                 if "claude" in self.model_type:
                     base_url = "https://api.anthropic.com/v1/messages"
                     headers = {
@@ -57,11 +89,18 @@ class AsyncDataParallelEngine(Engine):
                         "temperature": 0.7
                     }
                 else:
-                    base_url = f"{os.getenv('AZURE_OPENAI_ENDPOINT')}/openai/deployments/{self.model_type}/chat/completions?api-version={self.client._api_version}"
-                    headers = {
-                        "api-key": self.client.api_key,
-                        "Content-Type": "application/json"
-                    }
+                    if getattr(self, "azure_deployment", False):
+                        base_url = f"{os.getenv('AZURE_OPENAI_ENDPOINT')}/openai/deployments/{self.model_type}/chat/completions?api-version={self.client._api_version}"
+                        headers = {
+                            "api-key": self.client.api_key,
+                            "Content-Type": "application/json"
+                        }
+                    else:
+                        base_url = "https://api.openai.com/v1/chat/completions"
+                        headers = {
+                            "Authorization": f"Bearer {self.client.api_key}",
+                            "Content-Type": "application/json"
+                        }
                     json_data = {
                         "model": self.model_type,
                         "messages": prompt,
