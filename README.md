@@ -1,6 +1,7 @@
-# Can A Society of Generative Agents Simulate Human Behavior and Inform Public Health Policy? A Case Study on Vaccine Hesitancy.
-## Introduction
-This repo evaluates and analyzes a multi LLM agent framework, VacSim, for simulating health-related decision-making. Paper link: https://arxiv.org/abs/2503.09639
+This repository contains change from the repository "Vacsim" that accompanies the paper "Can A Society of Generative Agents Simulate Human Behavior and Inform Public Health Policy? A Case Study on Vaccine Hesitancy."
+Paper link: https://arxiv.org/abs/2503.09639
+
+I (HydnumRepandum) have no link with the team who publish this research.
 
 ## Installation
 1. Create and activate an environment in anaconda (recommend `python=3.10`)
