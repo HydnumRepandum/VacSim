@@ -3,10 +3,6 @@ Paper link: https://arxiv.org/abs/2503.09639
 
 I (HydnumRepandum) have no link with the team who publish this research.
 
-## Installation
-1. Create and activate an environment in anaconda (recommend `python=3.10`)
-2. `pip install -r requirements.txt`
-
 ### Running on Google Colab
 To use VacSim on [Google Colab](https://colab.research.google.com/), clone the repository and install the dependencies in a notebook cell:
 
@@ -22,8 +18,6 @@ VacSim can also run without OpenAI by loading the Gemma 3 270M model through Hug
 ```python
 !python src/driver.py 1 --warmup_days 1 --run_days 1 --model_type google/gemma-3-270m --news_path data/news/COVID-news-total-k=10000.pkl --network_str data/social_network-num=100-incl=neutral.pkl --profile_path data/profiles-num=100-incl=neutral.pkl --temperature 0.7
 ```
-
-No API keys are required when running with Gemma; the model weights are downloaded and used locally via `transformers`.
 
 ## Codebase Overview
 The main entry file of this repo is `driver.py`, which creates an `EvalSuite` object that conducts evaluations for the multi-agent system. Each `EvalSuite` (see implementations in `utils/eval_suite.py`) will analyze according to the `eval_mode` you input in:
