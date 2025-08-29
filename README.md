@@ -16,14 +16,6 @@ To use VacSim on [Google Colab](https://colab.research.google.com/), clone the r
 !pip install -r requirements.txt
 ```
 
-Then set the appropriate API key(s) and run the driver script. For example, using OpenAI models:
-
-```python
-import os
-os.environ["OPENAI_API_KEY"] = "sk-..."  # or set AZURE_OPENAI_API_KEY / ANTHROPIC_API_KEY
-!python src/driver.py 1 --warmup_days 1 --run_days 1 --model_type gpt-4o-mini --news_path data/news/COVID-news-total-k=10000.pkl --network_str data/social_network-num=100-incl=neutral.pkl --profile_path data/profiles-num=100-incl=neutral.pkl --ports 7000 --temperature 0.7
-```
-
 ### Using Gemma 3 270M Locally
 VacSim can also run without OpenAI by loading the Gemma 3 270M model through Hugging Face. After installing the dependencies in `requirements.txt`, set `--model_type` to the Gemma checkpoint:
 
